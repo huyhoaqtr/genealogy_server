@@ -17,7 +17,7 @@ const router = Router();
 
 // hello world
 router.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Hello World! 2");
 });
 
 router.use("/auth", authRoutes);
