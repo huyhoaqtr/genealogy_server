@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout source code
+      # Checkout source code from GitHub
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -18,32 +18,24 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
-      # Build and push images for genealogy_server and websocket_server
-      - name: Build and Push Docker Images
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: |
-          echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-          docker build -t ${DOCKER_USERNAME}/genealogy_server:latest ./genealogy_server
-          docker push ${DOCKER_USERNAME}/genealogy_server:latest
-          docker build -t ${DOCKER_USERNAME}/websocket_server:latest ./websocket_server
-          docker push ${DOCKER_USERNAME}/websocket_server:latest
-
       # SSH to server and deploy using docker-compose
       - name: Deploy to Server
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH Key để kết nối đến server
         run: |
+          mkdir -p ~/.ssh
+          echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
           ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_IP} <<EOF
-            cd /path/to/your/docker-compose/project
+            cd /home/genealogy_server
 
-            # Pull the latest images
-            docker-compose pull genealogy_server
-            docker-compose pull websocket_server
+            git pull origin main
 
-            # Recreate and restart services
+            docker-compose build
+
             docker-compose down
             docker-compose up -d
           EOF
