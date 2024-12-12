@@ -9,9 +9,9 @@ services:
       - mongo
     restart: always
 
-  web_socket:
+  websocket_server:
     build:
-      context: ./web_socket
+      context: ./websocket_server
       dockerfile: Dockerfile
     ports:
       - "5500:5500"
