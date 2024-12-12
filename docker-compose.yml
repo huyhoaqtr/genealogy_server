@@ -3,6 +3,7 @@ services:
     build:
       context: ./genealogy_server
       dockerfile: Dockerfile
+    container_name: genealogy_server_container
     ports:
       - "4040:4040"
     depends_on:
@@ -13,6 +14,7 @@ services:
     build:
       context: ./websocket_server
       dockerfile: Dockerfile
+    container_name: websocket_server_container
     ports:
       - "5500:5500"
     depends_on:
