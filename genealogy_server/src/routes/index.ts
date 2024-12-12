@@ -17,7 +17,7 @@ const router = Router();
 
 // hello world
 router.get("/", (req, res) => {
-  res.send("Hello, welcome to the Genealogy Server API!");
+  res.send("Hello Guest! Welcome to the Genealogy Server API!");
 });
 
 router.use("/auth", authRoutes);
