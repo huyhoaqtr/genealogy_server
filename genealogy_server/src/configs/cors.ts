@@ -3,10 +3,6 @@
  * Date: 2024-10-24
  */
 
-import { WHITELIST_DOMAINS } from "~/utils/constants";
-import envConfig from "~/configs/environment";
-import { StatusCodes } from "http-status-codes";
-import ApiError from "~/utils/api-error";
 import { CorsOptions } from "cors";
 
 export const corsOptions: CorsOptions = {
@@ -23,21 +19,11 @@ export const corsOptions: CorsOptions = {
    * an `ApiError` object as the first argument and `undefined` as
    * the second argument.
    */
-  origin: function (origin: string | undefined, callback: (err: any, allow?: boolean) => void) {
-    if (!origin && envConfig.BUILD_MODE === "dev") {
-      return callback(null, true);
-    }
-
-    if (WHITELIST_DOMAINS.includes(origin as string)) {
-      return callback(null, true);
-    }
-
-    return callback(
-      new ApiError(
-        StatusCodes.FORBIDDEN,
-        `${origin} not allowed by our CORS Policy.`
-      )
-    );
+  origin: function (
+    origin: string | undefined,
+    callback: (err: any, allow?: boolean) => void
+  ) {
+    return callback(null, true);
   },
 
   optionsSuccessStatus: 200,

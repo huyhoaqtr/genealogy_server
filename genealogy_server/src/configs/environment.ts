@@ -19,7 +19,7 @@ const envConfigSchema = z.object({
 });
 
 const envConfigProject = envConfigSchema.safeParse({
-  MONGODB_URL: process.env.MONGODB_URL,
+  MONGODB_URL: process.env.MONGO_URI,
   BUILD_MODE: process.env.BUILD_MODE,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,

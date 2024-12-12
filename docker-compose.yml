@@ -1,0 +1,32 @@
+services:
+  genealogy_server:
+    build:
+      context: ./genealogy_server
+      dockerfile: Dockerfile
+    ports:
+      - "4040:4040"
+    depends_on:
+      - mongo
+    restart: always
+
+  web_socket:
+    build:
+      context: ./web_socket
+      dockerfile: Dockerfile
+    ports:
+      - "5500:5500"
+    depends_on:
+      - genealogy_server
+    restart: always
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+
+volumes:
+  mongo-data:
