@@ -57,3 +57,5 @@ nextauth.js
 
 # Dependencies directory (if you're using a monorepo)
 node_modules/
+
+**/serviceAccountKey.json
