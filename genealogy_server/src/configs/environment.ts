@@ -14,7 +14,7 @@ const envConfigSchema = z.object({
   CHAIN_NET: z.string(),
   CONTRACT_ADDRESS: z.string(),
   PORT: z.string().default("3000"),
-  HOST: z.string().default("http://localhost"),
+  HOST: z.string().default("http://localhost:4040"),
   SOCKET_IO: z.string().default("http://localhost:5500"),
 });
 

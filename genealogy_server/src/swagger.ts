@@ -21,7 +21,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `${envConfig.HOST}:${envConfig.PORT}/api`,
+        url: `${envConfig.HOST}/api`,
       },
     ],
     components: {

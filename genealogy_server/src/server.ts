@@ -34,5 +34,5 @@ app.use(errorHandler);
 
 const PORT: number = Number(envConfig.PORT);
 app.listen(PORT, () => {
-  console.log(`Server is running on ${envConfig.HOST}:${PORT}`);
+  console.log(`Server is running on ${envConfig.HOST}`);
 });
