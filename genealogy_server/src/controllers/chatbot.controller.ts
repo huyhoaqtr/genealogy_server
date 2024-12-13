@@ -141,7 +141,7 @@ Người dùng hỏi: ${prompt}
 Dữ liệu liên quan từ cơ sở dữ liệu của tôi:
 ${JSON.stringify(dbQuery)}
 
-Dựa vào câu hỏi của người dùng và dữ liệu trên, hãy cung cấp một câu trả lời đúng trọng tâm và dễ tiếp cận. Nếu có thể, hãy giải thích thêm một cách ngắn gọn nhưng vẫn dễ hiểu.
+Dựa vào câu hỏi của người dùng và dữ liệu trên, hãy cung cấp một câu trả lời đúng trọng tâm và dễ tiếp cận.
 `;
 
       const response = await axios.post(
