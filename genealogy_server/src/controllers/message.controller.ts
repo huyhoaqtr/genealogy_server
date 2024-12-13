@@ -311,6 +311,7 @@ const messageController = {
       const infoIds = await infoModel
         .find({
           fullName: { $regex: keyword, $options: "i" },
+          _id: { $ne: user.info },
         })
         .select("_id");
 
