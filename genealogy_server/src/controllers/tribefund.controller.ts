@@ -49,8 +49,8 @@ const tribeFundController = {
       const rsFund = {
         ...newFund.toObject(),
         creator: {
-          ...user.info.toObject(),
-          tribe: user.tribe.id,
+          id: userId,
+          info: user.info,
         },
         transactions: undefined,
         totalDeposit: 0,
