@@ -4,9 +4,11 @@
  */
 
 import { Request, Response, NextFunction } from "express";
+import { sendMixedMessage } from "firebase/notification";
 import { StatusCodes } from "http-status-codes";
 import fundDetailModel from "~/models/fund-detail.schema";
 import fundModel from "~/models/fund.schema";
+import notificationModel from "~/models/notification.schema";
 import userModel from "~/models/user.schema";
 import ApiError from "~/utils/api-error";
 import { sendSuccessResponse } from "~/utils/api-response";
@@ -16,9 +18,17 @@ const tribeFundController = {
     try {
       const userId = req.user.id;
       const { title, desc, amount } = req.body;
-      const user = await userModel
+      const user: any = await userModel
         .findById(userId)
-        .select("_id tribe")
+        .select("-password")
+        .populate({
+          path: "tribe",
+          select: "members",
+          populate: {
+            path: "members",
+            select: "fcmKey",
+          },
+        })
         .populate({
           path: "info",
           select: "-children -couple",
@@ -33,16 +43,49 @@ const tribeFundController = {
         desc,
         amount,
         creator: userId,
-        tribe: user.tribe,
+        tribe: user.tribe.id,
       });
 
       const rsFund = {
         ...newFund.toObject(),
-        creator: user.toObject(),
+        creator: {
+          ...user.info.toObject(),
+          tribe: user.tribe.id,
+        },
         transactions: undefined,
         totalDeposit: 0,
         totalWithdraw: 0,
       };
+
+      let fcmTokens: string[] = [];
+      const notiTitle = `${user.info.fullName} đã tạo một quỹ gia tộc`;
+      const notiContent = newFund?.title;
+      await Promise.all(
+        user.tribe.members
+          .filter((member: any) => member.id !== userId)
+          .map(async (member: any) => {
+            fcmTokens = [...fcmTokens, ...member.fcmKey];
+            await notificationModel.create({
+              title: notiTitle,
+              desc: notiContent,
+              user: member.id,
+              type: "FUND",
+              screenId: newFund?.id,
+            });
+          })
+      );
+
+      if (fcmTokens.length > 0) {
+        await sendMixedMessage({
+          title: notiTitle,
+          body: notiContent!,
+          data: {
+            screen: "FUND",
+            screenId: newFund?.id,
+          },
+          tokens: fcmTokens,
+        });
+      }
 
       return sendSuccessResponse(
         res,
@@ -209,7 +252,7 @@ const tribeFundController = {
         .populate({
           path: "transactions",
         })
-        
+
         .populate({
           path: "creator",
           select: "_id info",

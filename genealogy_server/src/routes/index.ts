@@ -12,6 +12,7 @@ import fundRoutes from "./fund.routes";
 import voteRoutes from "./vote.routes";
 import feedRoutes from "./feed.routes";
 import web3Routes from "./web3.routes";
+import notificationRoutes from "./notification.routes";
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use("/fund", fundRoutes);
 router.use("/vote", voteRoutes);
 router.use("/feed", feedRoutes);
 router.use("/web3", web3Routes);
+router.use("/notification", notificationRoutes);
 
 export default router;

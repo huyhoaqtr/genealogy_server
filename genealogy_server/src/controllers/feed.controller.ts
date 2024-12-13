@@ -12,6 +12,8 @@ import userModel from "~/models/user.schema";
 import ApiError from "~/utils/api-error";
 import { sendSuccessResponse } from "~/utils/api-response";
 import { uploadToR2 } from "~/middleware/multer";
+import notificationModel from "~/models/notification.schema";
+import { sendMixedMessage } from "firebase/notification";
 
 const feedController = {
   createNewFeed: async (req: Request, res: Response, next: NextFunction) => {
@@ -21,21 +23,20 @@ const feedController = {
       const { content } = req.body;
       const files = req.files as Express.Multer.File[];
 
-      if (!content) {
-        return next(
-          new ApiError(
-            StatusCodes.BAD_REQUEST,
-            "Invalid input. Please provide content"
-          )
-        );
-      }
-
-      const user = await userModel
+      const user: any = await userModel
         .findById(userId)
         .select("-password")
         .populate({
           path: "info",
           select: "-couple -children",
+        })
+        .populate({
+          path: "tribe",
+          select: "members",
+          populate: {
+            path: "members",
+            select: "fcmKey",
+          },
         })
         .exec();
 
@@ -53,17 +54,54 @@ const feedController = {
         filePaths.push(...fileUrls);
       }
 
-      const newFeed = await feedModel.create({
+      const newFeed: any = await feedModel.create({
         user: userId,
         content,
         images: files && filePaths,
-        tribe: user.tribe,
+        tribe: user.tribe.id,
       });
+
+      let fcmTokens: string[] = [];
+      const notiTitle = `${user.info.fullName} đã tạo một bài viết`;
+      const notiContent =
+        newFeed.content ?? `Đã đăng ${newFeed.images.length} ảnh`;
+      await Promise.all(
+        user.tribe.members
+          .filter((member: any) => member.id !== userId)
+          .map(async (member: any) => {
+            fcmTokens = [...fcmTokens, ...member.fcmKey];
+            await notificationModel.create({
+              title: notiTitle,
+              desc: notiContent,
+              user: member.id,
+              type: "FEED",
+              screenId: newFeed.id,
+            });
+          })
+      );
+
+      if (fcmTokens.length > 0) {
+        await sendMixedMessage({
+          title: notiTitle,
+          body: notiContent,
+          data: {
+            screen: "FEED",
+            screenId: newFeed.id,
+          },
+          tokens: fcmTokens,
+        });
+      }
 
       return sendSuccessResponse(
         res,
         "Tạo bài viết thành công",
-        { ...newFeed.toObject(), user },
+        {
+          ...newFeed.toObject(),
+          user: {
+            ...user.toObject(),
+            tribe: user.tribe.id,
+          },
+        },
         StatusCodes.CREATED
       );
     } catch (error) {

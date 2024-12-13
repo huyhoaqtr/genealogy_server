@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
+import { sendMixedMessage } from "firebase/notification";
 import { StatusCodes } from "http-status-codes";
+import notificationModel from "~/models/notification.schema";
 import userModel from "~/models/user.schema";
-import { UserVote, VoteSessionModel } from "~/models/vote.model";
+import { VoteSessionModel } from "~/models/vote.model";
 import ApiError from "~/utils/api-error";
 import { sendSuccessResponse } from "~/utils/api-response";
 
@@ -24,7 +26,22 @@ const voteController = {
         );
       }
 
-      const user = await userModel.findById(userId).exec();
+      const user: any = await userModel
+        .findById(userId)
+        .select("-password")
+        .populate({
+          path: "info",
+          select: "-couple -children",
+        })
+        .populate({
+          path: "tribe",
+          select: "members",
+          populate: {
+            path: "members",
+            select: "fcmKey",
+          },
+        })
+        .exec();
 
       const voteSession = await VoteSessionModel.create({
         title,
@@ -53,6 +70,36 @@ const voteController = {
             select: "-children -couple",
           },
         });
+
+      let fcmTokens: string[] = [];
+      const notiTitle = `${user.info.fullName} đã tạo một cuộc biểu quyết`;
+      const notiContent = populatedVoteSession?.title;
+      await Promise.all(
+        user.tribe.members
+          .filter((member: any) => member.id !== userId)
+          .map(async (member: any) => {
+            fcmTokens = [...fcmTokens, ...member.fcmKey];
+            await notificationModel.create({
+              title: notiTitle,
+              desc: notiContent,
+              user: member.id,
+              type: "VOTE",
+              screenId: populatedVoteSession?.id,
+            });
+          })
+      );
+
+      if (fcmTokens.length > 0) {
+        await sendMixedMessage({
+          title: notiTitle,
+          body: notiContent!,
+          data: {
+            screen: "VOTE",
+            screenId: populatedVoteSession?.id,
+          },
+          tokens: fcmTokens,
+        });
+      }
 
       return sendSuccessResponse(
         res,

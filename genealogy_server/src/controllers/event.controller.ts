@@ -4,8 +4,10 @@
  */
 
 import { NextFunction, Request, Response } from "express";
+import { sendMixedMessage } from "firebase/notification";
 import { StatusCodes } from "http-status-codes";
 import eventModel from "~/models/event.schema";
+import notificationModel from "~/models/notification.schema";
 import userModel from "~/models/user.schema";
 import ApiError from "~/utils/api-error";
 import { sendSuccessResponse } from "~/utils/api-response";
@@ -15,7 +17,23 @@ const eventController = {
     try {
       const userId = req.user.id;
       const { title, desc, startDate, startTime } = req.body;
-      const user = await userModel.findById(userId).exec();
+      const user:any = await userModel
+        .findById(userId)
+        .select("-password")
+        .populate({
+          path: "info",
+          select: "-couple -children",
+        })
+        .populate({
+          path: "tribe",
+          select: "members",
+          populate: {
+            path: "members",
+            select: "fcmKey",
+          },
+        })
+        .exec();
+
       if (!user) {
         throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy user");
       }
@@ -25,7 +43,7 @@ const eventController = {
         desc,
         startDate,
         startTime,
-        tribe: user.tribe,
+        tribe: user.tribe.id,
       });
 
       const response = await eventModel.findById(newEvent.id).populate({
@@ -36,6 +54,36 @@ const eventController = {
           select: "-couple -children",
         },
       });
+
+      let fcmTokens: string[] = [];
+      const notiTitle = `${user.info.fullName} đã tạo một sự kiện`;
+      const notiContent = response?.title;
+      await Promise.all(
+        user.tribe.members
+          .filter((member: any) => member.id !== userId)
+          .map(async (member: any) => {
+            fcmTokens = [...fcmTokens, ...member.fcmKey];
+            await notificationModel.create({
+              title: notiTitle,
+              desc: notiContent,
+              user: member.id,
+              type: "EVENT",
+              screenId: response?.id,
+            });
+          })
+      );
+
+      if (fcmTokens.length > 0) {
+        await sendMixedMessage({
+          title: notiTitle,
+          body: notiContent!,
+          data: {
+            screen: "EVENT",
+            screenId: response?.id,
+          },
+          tokens: fcmTokens,
+        });
+      }
 
       return sendSuccessResponse(res, "Thành công", response, StatusCodes.OK);
     } catch (error) {

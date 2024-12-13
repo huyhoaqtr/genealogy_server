@@ -44,7 +44,6 @@ router
    */
   .post(
     "/create-fund",
-    authenticateJWT,
     permission([Role.LEADER, Role.ADMIN]),
     tribeFundController.createTribeFund
   )
@@ -76,7 +75,6 @@ router
    */
   .post(
     "/create-transaction",
-    authenticateJWT,
     permission([Role.LEADER, Role.ADMIN]),
     tribeFundController.createFundTransaction
   )
@@ -93,8 +91,6 @@ router
    */
    .get(
     "/get-all-fund",
-    authenticateJWT,
-    permission([Role.LEADER, Role.ADMIN]),
     tribeFundController.getAllTribeFund
   )
 
@@ -117,8 +113,6 @@ router
    */
   .get(
     "/get-fund/:id",
-    authenticateJWT,
-    permission([Role.LEADER, Role.ADMIN]),
     tribeFundController.getTribeFund
   )
   /**
@@ -140,6 +134,7 @@ router
    */
   .delete(
     "/delete-fund/:id",
+    permission([Role.LEADER, Role.ADMIN]),
     tribeFundController.deleteTribeFund
   )
 

@@ -467,13 +467,6 @@ const tribeController = {
         })
         .exec();
 
-      if (!ancestor) {
-        throw new ApiError(
-          StatusCodes.NOT_FOUND,
-          "Không tìm thấy tổ tiên của gia tộc"
-        );
-      }
-
       const getFamilyMembers: any = async (
         memberId: string
       ): Promise<any[]> => {
@@ -507,7 +500,7 @@ const tribeController = {
         return members.concat(children.flat());
       };
 
-      const familyMembers = await getFamilyMembers(ancestor._id);
+      const familyMembers = await getFamilyMembers(ancestor?._id);
 
       return sendSuccessResponse(
         res,
@@ -617,13 +610,6 @@ const tribeController = {
         })
         .exec();
 
-      if (!ancestor) {
-        throw new ApiError(
-          StatusCodes.NOT_FOUND,
-          "Không tìm thấy tổ tiên của gia tộc"
-        );
-      }
-
       const getFamilyMembers: any = async (
         memberId: string
       ): Promise<any[]> => {
@@ -663,7 +649,7 @@ const tribeController = {
         return members.concat(children.flat());
       };
 
-      const familyMembers = await getFamilyMembers(ancestor._id);
+      const familyMembers = await getFamilyMembers(ancestor?._id);
 
       const memberInfoList: any[] = [];
 

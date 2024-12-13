@@ -80,6 +80,7 @@ const authController = {
 
         info = await infoModel.create({
           fullName,
+          avatar: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
         });
 
         await tribe.updateOne({ leader: user.id });
@@ -91,8 +92,13 @@ const authController = {
 
         await genealogyModel.create({
           tribe: tribe.id,
-          data: initialGenealogy
-        })
+          data: initialGenealogy,
+        });
+
+        await tribeModel.updateOne(
+          { code: newTribeCode },
+          { $addToSet: { members: user.id } }
+        );
 
         jwtSignInPayload.id = user.id;
         jwtSignInPayload.role = user.role;
