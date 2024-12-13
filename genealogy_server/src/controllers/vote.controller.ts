@@ -89,8 +89,6 @@ const voteController = {
           })
       );
 
-      console.log('votetoken', fcmTokens);
-
       if (fcmTokens.length > 0) {
         await sendMixedMessage({
           title: notiTitle,
@@ -154,6 +152,53 @@ const voteController = {
         "Lay du lieu vote session thanh cong",
         voteSession,
         StatusCodes.CREATED
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return next(error);
+      }
+
+      return next(
+        new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra")
+      );
+    }
+  },
+
+  getVoteSessionById: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const voteSessionId = req.params.id;
+      const voteSession = await VoteSessionModel.findById(voteSessionId)
+        .populate({
+          path: "creator",
+          select: "info",
+          populate: {
+            path: "info",
+            select: "-children -couple",
+          },
+        })
+        .populate({
+          path: "options.votes",
+          select: "_id info",
+          populate: {
+            path: "info",
+            select: "-children -couple",
+          },
+        })
+        .exec();
+
+      if (!voteSession) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy dữ liệu");
+      }
+
+      return sendSuccessResponse(
+        res,
+        "Lay du lieu vote session thanh cong",
+        voteSession,
+        StatusCodes.OK
       );
     } catch (error) {
       if (error instanceof ApiError) {

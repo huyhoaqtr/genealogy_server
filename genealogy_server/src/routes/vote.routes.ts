@@ -65,6 +65,27 @@ router
 
   /**
    *  @swagger
+   *  /vote/get-vote-session-by-id/:id:
+   *    get:
+   *      tags: [Tribe Vote]
+   *      summary: get vote by 
+   *      parameters:
+   *        - in: path
+   *          name: id
+   *          required: true
+   *          schema:
+   *            type: string
+   *      responses:
+   *        200:
+   *          description: OK
+   */
+  .get(
+    "/get-vote-session-by-id/:id",
+    voteController.getVoteSessionById
+  )
+
+  /**
+   *  @swagger
    *  /vote/cast-vote:
    *    post:
    *      tags: [Tribe Vote]
