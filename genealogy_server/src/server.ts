@@ -4,6 +4,7 @@
  */
 
 import cors from "cors";
+import cron from "node-cron";
 import express from "express";
 import routes from "./routes/index";
 import cookieParser from "cookie-parser";
@@ -13,6 +14,7 @@ import connectDB from "~/configs/db";
 import envConfig from "~/configs/environment";
 import swaggerApp from "./swagger";
 import { io } from "socket.io-client";
+import { eventController } from "~/controllers";
 
 connectDB();
 const app = express();
@@ -31,6 +33,12 @@ app.use("/api", routes);
 // Swagger
 app.use(swaggerApp);
 app.use(errorHandler);
+
+process.env.TZ = "Asia/Ho_Chi_Minh";
+
+cron.schedule("0 5 * * *", () => {
+  eventController.cronEvent()
+});
 
 const PORT: number = Number(envConfig.PORT);
 app.listen(PORT, () => {

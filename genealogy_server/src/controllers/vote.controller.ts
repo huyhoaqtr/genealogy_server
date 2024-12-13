@@ -89,6 +89,8 @@ const voteController = {
           })
       );
 
+      console.log('votetoken', fcmTokens);
+
       if (fcmTokens.length > 0) {
         await sendMixedMessage({
           title: notiTitle,

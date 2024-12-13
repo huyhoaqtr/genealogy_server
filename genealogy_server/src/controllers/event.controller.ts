@@ -17,7 +17,7 @@ const eventController = {
     try {
       const userId = req.user.id;
       const { title, desc, startDate, startTime } = req.body;
-      const user:any = await userModel
+      const user: any = await userModel
         .findById(userId)
         .select("-password")
         .populate({
@@ -254,6 +254,66 @@ const eventController = {
       return next(
         new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra")
       );
+    }
+  },
+  cronEvent: async () => {
+    try {
+      console.log("cron job is running");
+      const currentDate = new Date();
+      const fiveDaysLater = new Date(currentDate);
+      fiveDaysLater.setDate(fiveDaysLater.getDate() + 5);
+
+      const events: any = await eventModel.find({
+        startDate: { $gte: currentDate, $lte: fiveDaysLater },
+      });
+
+      console.log("events", events);
+
+      await Promise.all(
+        events.map(async (event: any) => {
+          const timeDiff = event.startDate.getTime() - currentDate.getTime();
+
+          let notiTitle;
+          let notiContent;
+
+          if (timeDiff === 0) {
+            notiTitle = "Đã tới thời gian diễn ra sự kiện!";
+            notiContent = `Sự kiện ${event.title} đang diễn ra`;
+          } else if (timeDiff <= 3 * 24 * 60 * 60 * 1000) {
+            notiTitle = "Đừng bỏ lỡ!!!";
+            notiContent = `Sự kiện ${event.title} sắp bắt đầu!`;
+          }
+
+          const fcmTokens: any = [];
+
+          const eventTribe = await event.populate({
+            path: "tribe",
+            select: "members",
+            populate: {
+              path: "members",
+              select: "fcmKey",
+            },
+          });
+
+          await Promise.all(
+            eventTribe.tribe.members.map(async (member: any) => {
+              fcmTokens.push(...member.fcmKey);
+            })
+          );
+          if (notiContent && notiTitle && fcmTokens.length > 0)
+            await sendMixedMessage({
+              title: notiTitle,
+              body: notiContent,
+              data: {
+                screen: "EVENT",
+                screenId: event._id.toString(),
+              },
+              tokens: fcmTokens,
+            });
+        })
+      );
+    } catch (error) {
+      console.error("Error executing cron job:", error);
     }
   },
 };
