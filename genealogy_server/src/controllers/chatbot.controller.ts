@@ -159,7 +159,6 @@ Dựa vào câu hỏi của người dùng và dữ liệu trên, hãy cung cấ
         }
       );
 
-
       return sendSuccessResponse(
         res,
         "Thực hành thành công",
