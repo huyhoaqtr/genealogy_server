@@ -29,7 +29,6 @@ const s3 = new S3Client({
 const storage = multer.memoryStorage();
 
 const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
-  console.log("file", file.size);
   if (!file.mimetype.startsWith("image/")) {
     cb(
       new ApiError(StatusCodes.BAD_REQUEST, "Chỉ cho phép upload các file ảnh"),
