@@ -9,14 +9,13 @@ declare module "express" {
     user?: any;
   }
 }
-import { Multer } from 'multer';
+import { Multer } from "multer";
 
 declare global {
   namespace Express {
     interface Request {
-      file?: Multer.File;  // Thêm thuộc tính `file` cho Request
+      file?: Multer.File; // Thêm thuộc tính `file` cho Request
       files?: Multer.File[]; // Nếu cần xử lý nhiều file (array)
     }
   }
 }
-

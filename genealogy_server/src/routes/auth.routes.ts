@@ -185,6 +185,50 @@ router
    *       200:
    *         description: Logout
    */
-  .get("/logout", authenticateJWT, authController.logout);
+  .get("/logout", authenticateJWT, authController.logout)
+
+  /**
+   * @swagger
+   * /auth/get-otp:
+   *   post:
+   *     tags: [Auth]
+   *     summary: Get OTP
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               phoneNumber:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Get OTP
+   */
+  .post("/get-otp",  authController.getOTP)
+
+  /**
+   * @swagger
+   * /auth/verify-otp:
+   *   post:
+   *     tags: [Auth]
+   *     summary: Get OTP
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               phoneNumber:
+   *                 type: string
+   *               otp:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Get OTP
+   */
+  .post("/verify-otp",  authController.verifyOTP)
 
 export default router;

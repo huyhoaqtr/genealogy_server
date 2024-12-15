@@ -11,9 +11,10 @@ import feedModel from "~/models/feed.schema";
 import userModel from "~/models/user.schema";
 import ApiError from "~/utils/api-error";
 import { sendSuccessResponse } from "~/utils/api-response";
-import { uploadToR2 } from "~/middleware/multer";
+import { deleteFromR2, uploadToR2 } from "~/middleware/multer";
 import notificationModel from "~/models/notification.schema";
 import { sendMixedMessage } from "firebase/notification";
+import { exportR2Key } from "~/utils/generate";
 
 const feedController = {
   createNewFeed: async (req: Request, res: Response, next: NextFunction) => {
@@ -118,8 +119,23 @@ const feedController = {
   updateFeed: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user.id;
-      const { feedId, content } = req.body;
+      const { feedId, content, removeImages } = req.body;
       const files = req.files as Express.Multer.File[];
+
+      const user: any = await userModel
+        .findById(userId)
+        .select("-password")
+        .populate({
+          path: "info",
+          select: "-couple -children",
+        })
+        .exec();
+
+      if (!user) {
+        return next(
+          new ApiError(StatusCodes.NOT_FOUND, "Không tìm thất dữ liệu")
+        );
+      }
 
       if (!feedId) {
         return next(
@@ -147,22 +163,31 @@ const feedController = {
         );
       }
 
-      // Xử lý xóa ảnh cũ nếu có ảnh mới
-      if (files && files.length > 0) {
-        // Xóa ảnh cũ từ server nếu có
-        if (feed.images && feed.images.length > 0) {
-          feed.images.forEach((imagePath) => {
-            const filePath = path.resolve(imagePath);
-            // Kiểm tra và xóa ảnh cũ
-            if (fs.existsSync(filePath)) {
-              fs.unlinkSync(filePath);
-            }
-          });
-        }
-
-        // Lưu ảnh mới
-        feed.images = files.map((file) => file.path);
+      if (removeImages && Array.isArray(removeImages)) {
+        await Promise.all(
+          removeImages.map(async (imagePath) => {
+            const oldAvatarPath = exportR2Key(imagePath);
+            await deleteFromR2(oldAvatarPath);
+          })
+        );
       }
+
+      let fileUrls: string[] = [];
+
+      if (files && files.length > 0) {
+        const fileUploadPromises = files.map(async (file) => {
+          const fileUrl = await uploadToR2(file);
+          return fileUrl;
+        });
+
+        fileUrls = await Promise.all(fileUploadPromises);
+      }
+
+      const filteredImages = feed.images.filter(
+        (imageUrl) => !(removeImages ?? []).includes(imageUrl)
+      );
+
+      feed.images = [...filteredImages, ...fileUrls];
 
       // Cập nhật nội dung
       feed.content = content || feed.content;
@@ -178,7 +203,13 @@ const feedController = {
       return sendSuccessResponse(
         res,
         "Cập nhật bài viết thành công",
-        updatedFeed,
+        {
+          ...updatedFeed.toObject(),
+          user: {
+            ...user.toObject(),
+            tribe: user.tribe,
+          },
+        },
         StatusCodes.OK
       );
     } catch (error) {
@@ -375,7 +406,7 @@ const feedController = {
       const userId = req.user.id;
       const { id } = req.params;
 
-      await feedModel.findOneAndDelete({ id: id, user: userId }).exec();
+      await feedModel.findOneAndDelete({ _id: id, user: userId }).exec();
 
       return sendSuccessResponse(
         res,
@@ -422,6 +453,64 @@ const feedController = {
 
       const totalFeeds = await feedModel.countDocuments({
         tribe: user?.tribe,
+      });
+
+      const totalPages = Math.ceil(totalFeeds / Number(limit));
+      const pagingResponse = {
+        data: feeds,
+        meta: {
+          page: Number(page),
+          limit: Number(limit),
+          total: totalFeeds,
+          totalPages,
+        },
+      };
+
+      return sendSuccessResponse(
+        res,
+        "Tạo bài viết thành công",
+        pagingResponse,
+        StatusCodes.CREATED
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return next(error);
+      }
+      return next(
+        new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra")
+      );
+    }
+  },
+
+  getAllFeedByUser: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user.id;
+      const { page = 1, limit = 1000 } = req.query;
+      const skip = (Number(page) - 1) * Number(limit);
+
+      const user = await userModel.findById(userId).exec();
+      if (!user) {
+        new ApiError(StatusCodes.BAD_REQUEST, "Khong tim thay user");
+      }
+
+      const feeds = await feedModel
+        .find({ tribe: user?.tribe, user: userId })
+        .skip(skip)
+        .limit(Number(limit))
+        .sort({ createdAt: -1 })
+        .populate({
+          path: "user",
+          select: "-password",
+          populate: {
+            path: "info",
+            select: "-children -couple",
+          },
+        })
+        .exec();
+
+      const totalFeeds = await feedModel.countDocuments({
+        tribe: user?.tribe,
+        user: userId,
       });
 
       const totalPages = Math.ceil(totalFeeds / Number(limit));

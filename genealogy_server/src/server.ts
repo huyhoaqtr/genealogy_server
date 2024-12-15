@@ -15,8 +15,24 @@ import envConfig from "~/configs/environment";
 import swaggerApp from "./swagger";
 import { io } from "socket.io-client";
 import { eventController } from "~/controllers";
+import { redisClient } from "~/configs/redis";
 
 connectDB();
+
+// Kết nối Redis từ 
+redisClient.on("error", (err) => {
+  console.error("Redis connection error:", err);
+});
+
+(async () => {
+  try {
+    await redisClient.connect();
+    console.log("Connected to Redis");
+  } catch (err) {
+    console.error("Could not connect to Redis:", err);
+  }
+})();
+
 const app = express();
 
 // Middleware

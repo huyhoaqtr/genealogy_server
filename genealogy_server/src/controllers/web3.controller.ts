@@ -21,7 +21,7 @@ const web3Controller = {
   ) => {
     try {
       const userId = req.user.id;
-      const user:any = await userModel
+      const user: any = await userModel
         .findById(userId)
         .populate({
           path: "tribe",
@@ -50,19 +50,96 @@ const web3Controller = {
         .addFile(user.tribe._id.toString(), user.id, ipfsAddress)
         .send({ from: senderAccount });
 
-      await transactionModel.create({
+      const transaction = await transactionModel.create({
         user: userId,
         tribe: user.tribe.id,
         txHash: receipt.transactionHash,
         blockId: receipt.events?.FileAdded.returnValues.id,
       });
 
+      const rsData = await transactionModel
+        .findById(transaction.id)
+        .populate({
+          path: "user",
+          select: "_id info",
+          populate: {
+            path: "info",
+            select: "-children -couple",
+          },
+        })
+        .lean()
+        .exec();
+
       return sendSuccessResponse(
         res,
         "Tạo quỹ thành công",
-        {
-          txHash: receipt.transactionHash,
+        rsData,
+        StatusCodes.OK
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return next(error);
+      }
+      return next(
+        new ApiError(
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          "An error occurred while uploading the file"
+        )
+      );
+    }
+  },
+
+  getAllTransactionsByTribe: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = req.user.id;
+      const { page = 1, limit = 1000 } = req.query;
+      const user: any = await userModel.findById(userId).exec();
+
+      if (!user) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy dữ liệu");
+      }
+      const transactions = await transactionModel
+        .find({
+          tribe: user.tribe,
+        })
+        .populate({
+          path: "user",
+          select: "_id info",
+          populate: {
+            path: "info",
+            select: "-children -couple",
+          },
+        })
+        .skip((Number(page) - 1) * Number(limit))
+        .limit(Number(limit))
+        .sort({ createdAt: -1 })
+        .lean()
+        .exec();
+
+      const totalTransactions = await transactionModel.countDocuments({
+        tribe: user.tribe,
+      });
+
+      const totalPages = Math.ceil(totalTransactions / Number(limit));
+
+      const pagingResponse = {
+        data: transactions,
+        meta: {
+          page: Number(page),
+          limit: Number(limit),
+          total: totalTransactions,
+          totalPages,
         },
+      };
+
+      return sendSuccessResponse(
+        res,
+        "Lay danh sach giao dich",
+        pagingResponse,
         StatusCodes.OK
       );
     } catch (error) {

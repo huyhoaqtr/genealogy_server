@@ -224,6 +224,33 @@ router
 
   /**
    *  @swagger
+   *  /feed/get-all-feed-by-user:
+   *    get:
+   *      tags: [Feed]
+   *      summary: Toggle like comment
+   *      parameters:
+   *        - in: query
+   *          name: page
+   *          required: true
+   *          description: Page number for pagination
+   *          schema:
+   *            type: integer
+   *            example: 1
+   *        - in: query
+   *          name: limit
+   *          required: true
+   *          description: Number of items per page
+   *          schema:
+   *            type: integer
+   *            example: 24
+   *      responses:
+   *        200:
+   *          description: OK
+   */
+  .get("/get-all-feed-by-user", feedController.getAllFeedByUser)
+
+  /**
+   *  @swagger
    *  /feed/get-all-comment:
    *    get:
    *      tags: [Feed]

@@ -13,13 +13,21 @@ import tribeModel from "~/models/tribe.schema";
 import infoModel from "~/models/info.schema";
 import { generateAccessToken } from "~/utils/token";
 import { sendSuccessResponse } from "~/utils/api-response";
-import fs from "fs";
 import conversationModel from "~/models/conversation.schema";
 import { ConversationRole } from "~/utils/type";
 import { deleteFromR2, uploadToR2 } from "~/middleware/multer";
 import genealogyModel from "~/models/genealogy.schema";
 import { initialGenealogy } from "~/utils/constants";
+import { redisClient } from "~/configs/redis";
 
+const TelesignSDK = require("telesignenterprisesdk");
+
+const client = new TelesignSDK(
+  process.env.TELESIGN_CUSTOMER_ID,
+  process.env.TELESIGN_API_KEY
+);
+
+// Kết nối tới Redis
 const authController = {
   /**
    * Registers a new user and assigns them to a tribe based on the role.
@@ -344,9 +352,9 @@ const authController = {
   updateUserInfo: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.user.id;
-      const { fullName, address, description } = req.body;
+      const { fullName, address, email, dateOfBirth, gender } = req.body;
       const avatar = req.file;
-      const user = await userModel.findById(id).select("-password").exec();
+      const user: any = await userModel.findById(id).select("-password").exec();
 
       if (!user) {
         throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy dữ liệu");
@@ -357,16 +365,19 @@ const authController = {
         }
         if (fullName) info.fullName = fullName;
         if (address) info.address = address;
+        if (email) info.email = email;
+        if (dateOfBirth) info.dateOfBirth = dateOfBirth;
+        if (gender) info.gender = gender;
         if (avatar) {
           if (info.avatar) {
             const oldAvatarPath = exportR2Key(info.avatar);
             await deleteFromR2(oldAvatarPath);
           }
           info.avatar = await uploadToR2(avatar);
+          
         }
-        if (description) info.description = description;
         await info.save();
-        user.info = info as any;
+        user.info = info;
         return sendSuccessResponse(
           res,
           "Cập nhật thành công",
@@ -399,23 +410,24 @@ const authController = {
     try {
       const id = req.user.id;
       const { oldPassword, newPassword } = req.body;
-      const user = await userModel.findById(id).select("-password").exec();
+      const user = await userModel.findById(id).select("password").exec();
+
       if (!user) {
         throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy dữ liệu");
-      } else {
-        if (!(await bcrypt.compare(oldPassword, user.password))) {
-          throw new ApiError(StatusCodes.BAD_REQUEST, "Mật khẩu không đúng");
-        }
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedPassword;
-        await user.save();
-        return sendSuccessResponse(
-          res,
-          "Thay đổi mật khẩu thành công",
-          user,
-          StatusCodes.OK
-        );
       }
+      if (!(await bcrypt.compare(oldPassword, user.password))) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "Mật khẩu không đúng");
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+      return sendSuccessResponse(
+        res,
+        "Thay đổi mật khẩu thành công",
+        user,
+        StatusCodes.OK
+      );
     } catch (error) {
       if (error instanceof ApiError) {
         return next(error);
@@ -444,6 +456,104 @@ const authController = {
           "Cập nhật FCM key thành cong",
           user,
           StatusCodes.OK
+        );
+      }
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return next(error);
+      } else {
+        return next(
+          new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra")
+        );
+      }
+    }
+  },
+
+  getOTP: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { phoneNumber } = req.body;
+
+      const existingPhoneNumber = await userModel.findOne({
+        phoneNumber,
+      }).exec();
+
+      if (!existingPhoneNumber) {
+        throw new ApiError(
+          StatusCodes.BAD_REQUEST,
+          "Số điện thoại không tồn tại"
+        );
+      }
+
+      const otp = Math.floor(100000 + Math.random() * 900000); // Tạo OTP 6 chữ số
+      const params = {
+        verify_code: otp.toString(),
+      };
+
+      client.verify.sms(
+        async (error: any, responseBody: any) => {
+          if (error) {
+            console.error("Unable to send message. " + error);
+            throw new ApiError(
+              StatusCodes.INTERNAL_SERVER_ERROR,
+              "Failed to send OTP"
+            );
+          }
+
+          if (responseBody.status.code != 500) {
+            await redisClient.del(phoneNumber);
+            await redisClient.set(phoneNumber, otp, { EX: 300 });
+
+            return sendSuccessResponse(
+              res,
+              "Tạo OTP thành công",
+              { responseBody, otp },
+              StatusCodes.OK
+            );
+          }
+          return next(
+            new ApiError(
+              StatusCodes.INTERNAL_SERVER_ERROR,
+              "Đã có lỗi xảy ra, vui lòng thử lại sau!"
+            )
+          );
+        },
+        phoneNumber,
+        params
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return next(error);
+      } else {
+        return next(
+          new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra")
+        );
+      }
+    }
+  },
+
+  verifyOTP: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { phoneNumber, otp } = req.body;
+
+      let verifyStatus = false;
+
+      const cacheOtp = await redisClient.get(phoneNumber);
+      if (cacheOtp && cacheOtp == otp) {
+        verifyStatus = true;
+        await redisClient.del(phoneNumber);
+      }
+
+      if (verifyStatus) {
+        return sendSuccessResponse(
+          res,
+          "Xác thực OTP thành công",
+          { otp },
+          StatusCodes.OK
+        );
+      } else {
+        throw new ApiError(
+          StatusCodes.BAD_REQUEST,
+          "OTP hết hạn hoặc không hợp lệ"
         );
       }
     } catch (error) {

@@ -45,6 +45,37 @@ router
     permission([Role.LEADER, Role.ADMIN]),
     web3Upload.single("file"),
     web3Controller.uploadFileToIPFSAndSmartContract
-  );
+  )
+
+  router
+  /**
+   *  @swagger
+   *  /web3/get-all-transaction-by-tribe:
+   *    get:
+   *      tags: [Web3]
+   *      summary: Get all transaction by tribe
+   *      parameters:
+   *        - in: query
+   *          name: page
+   *          required: true
+   *          schema:
+   *            type: integer
+   *            example: 1
+   *          description: Page number
+   *        - in: query
+   *          name: limit
+   *          required: true
+   *          schema:
+   *            type: integer
+   *            example: 24
+   *          description: Number of items per page
+   *      responses:
+   *        200:
+   *          description: OK
+   */
+  .get(
+    "/get-all-transaction-by-tribe",
+    web3Controller.getAllTransactionsByTribe
+  )
 
 export default router;

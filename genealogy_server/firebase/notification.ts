@@ -4,6 +4,7 @@ import serviceAccount from "./serviceAccountKey.json";
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount as any),
 });
+
 interface NotificationMessage {
   title: string;
   body: string;
@@ -172,3 +173,4 @@ export const sendMulticastNotifications = async (
     throw new Error("Error sending multicast notifications");
   }
 };
+
