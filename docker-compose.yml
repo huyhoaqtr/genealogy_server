@@ -10,6 +10,8 @@ services:
       - mongo
       - redis
     restart: always
+    networks:
+      - genealogy_network
 
   websocket_server:
     build:
@@ -21,6 +23,8 @@ services:
     depends_on:
       - genealogy_server
     restart: always
+    networks:
+      - genealogy_network
 
   mongo:
     image: mongo:6.0
@@ -30,14 +34,26 @@ services:
     volumes:
       - mongo-data:/data/db
     restart: always
+    networks:
+      - genealogy_network
 
   redis:
     image: redis:7.0
     container_name: redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data/db
     restart: always
+    networks:
+      - genealogy_network
 
 volumes:
   mongo-data:
     external: true
+  redis-data:
+    external: true
+
+networks:
+  genealogy_network:
+    driver: bridge
