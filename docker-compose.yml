@@ -30,10 +30,14 @@ services:
     image: mongo:6.0
     container_name: mongo
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: 123456789
     restart: always
+
     networks:
       - genealogy_network
 
@@ -50,10 +54,7 @@ services:
 
 volumes:
   mongo-data:
-    external: true
   redis-data:
-    external: true
 
 networks:
   genealogy_network:
-    driver: bridge
