@@ -77,6 +77,8 @@ const infoSchema = new mongoose.Schema(
   }
 );
 
+infoSchema.index({ tribe: 1 });
+
 const infoModel = mongoose.model("Info", infoSchema);
 
 export default infoModel;

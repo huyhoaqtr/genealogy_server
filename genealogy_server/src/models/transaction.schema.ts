@@ -25,6 +25,8 @@ const transactionSchema = new mongoose.Schema(
   }
 );
 
+transactionSchema.index({ tribe: 1 });
+
 const transactionModel = mongoose.model("transaction", transactionSchema);
 
 export default transactionModel;

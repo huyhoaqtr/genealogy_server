@@ -38,6 +38,8 @@ const eventSchema = new mongoose.Schema(
   }
 );
 
+eventSchema.index({ tribe: 1 });
+
 const eventModel = mongoose.model("Event", eventSchema);
 
 export default eventModel;

@@ -33,6 +33,9 @@ const conversationSchema = new mongoose.Schema(
   }
 );
 
+conversationSchema.index({ tribe: 1 });
+
+
 const conversationModel = mongoose.model("Conversation", conversationSchema);
 
 export default conversationModel;

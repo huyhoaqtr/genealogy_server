@@ -35,6 +35,8 @@ const feedSchema = new mongoose.Schema(
   }
 );
 
+feedSchema.index({ tribe: 1 });
+
 const feedModel = mongoose.model("Feed", feedSchema);
 
 export default feedModel;

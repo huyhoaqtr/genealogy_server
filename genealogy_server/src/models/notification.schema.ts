@@ -38,6 +38,8 @@ const notificationSchema = new mongoose.Schema(
   }
 );
 
+notificationSchema.index({ user: 1 });
+
 const notificationModel = mongoose.model("notification", notificationSchema);
 
 export default notificationModel;

@@ -39,6 +39,8 @@ const VoteSessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+VoteSessionSchema.index({ tribe: 1 });
+
 const UserVoteSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Types.ObjectId, required: true, ref: "User" },
@@ -51,6 +53,8 @@ const UserVoteSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+UserVoteSchema.index({ voteSession: 1 });
 
 const VoteSessionModel = mongoose.model("VoteSession", VoteSessionSchema);
 const UserVote = mongoose.model("UserVote", UserVoteSchema);

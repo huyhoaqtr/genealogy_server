@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+userSchema.index({ phoneNumber: 1 });
+
+userSchema.index({ tribe: 1 });
+
 const userModel = mongoose.model("User", userSchema);
 
 export default userModel;

@@ -35,6 +35,8 @@ const fundDetailSchema = new mongoose.Schema(
   }
 );
 
+fundDetailSchema.index({ fund: 1 });
+
 const fundDetailModel = mongoose.model("FundDetail", fundDetailSchema);
 
 export default fundDetailModel;

@@ -40,6 +40,8 @@ const fundSchema = new mongoose.Schema(
   }
 );
 
+fundSchema.index({ tribe: 1 });
+
 const fundModel = mongoose.model("Fund", fundSchema);
 
 export default fundModel;
