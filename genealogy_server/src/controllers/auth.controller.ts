@@ -266,14 +266,6 @@ const authController = {
       const user = await userModel
         .findById(uid)
         .select("-password")
-        .populate({
-          path: "tribe",
-          select: "-members",
-          populate: {
-            path: "leader",
-            select: "-password",
-          },
-        })
         .populate("info")
         .exec();
 
