@@ -71,10 +71,21 @@ router
    */
   .put(
     "/update-tribe",
-    authenticateJWT,
     permission([Role.LEADER]),
     tribeController.updateTribe
   )
+
+  /**
+   *  @swagger
+   *  /tribe/get-all-member:
+   *    get:
+   *      tags: [Tribe]
+   *      summary: Get all member
+   *      responses:
+   *        200:
+   *          description: OK
+   */
+  .get("/get-all-member", tribeController.getAllMember)
 
   /**
    *  @swagger
@@ -102,7 +113,6 @@ router
    */
   .put(
     "/update-permission",
-    authenticateJWT,
     permission([Role.LEADER]),
     tribeController.updatePermission
   )

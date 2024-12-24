@@ -207,6 +207,45 @@ const tribeController = {
     }
   },
 
+  getAllMember: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user.id;
+
+      const user = await userModel
+        .findById(userId)
+        .select("-password")
+
+        .exec();
+
+      if (!user) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy dữ liệu");
+      }
+
+      const allMember = await userModel
+        .find({ tribe: user.tribe })
+        .select("-password")
+        .populate({
+          path: "info",
+          select: "-children -couple",
+        })
+        .exec();
+
+      return sendSuccessResponse(
+        res,
+        "Cập nhật dữ liệu thành công",
+        allMember,
+        StatusCodes.OK
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return next(error);
+      }
+      return next(
+        new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra")
+      );
+    }
+  },
+
   /**
    * Creates a new tree for a tribe.
    *
