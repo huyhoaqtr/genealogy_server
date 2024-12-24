@@ -343,6 +343,47 @@ const voteController = {
       );
     }
   },
+
+  deleteVoteSessionById: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      const voteSessionId = req.params.id;
+      const voteSession: any = await VoteSessionModel.findById(
+        voteSessionId
+      ).exec();
+
+      if (!voteSession) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy dữ liệu");
+      }
+
+      if (
+        (userRole === "ADMIN" && voteSession.creator !== userId) ||
+        userRole === "MEMBER"
+      ) {
+        throw new ApiError(StatusCodes.FORBIDDEN, "Bạn không có quyền");
+      }
+
+      return sendSuccessResponse(
+        res,
+        "Xoa vote session thanh cong",
+        null,
+        StatusCodes.OK
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return next(error);
+      }
+
+      return next(
+        new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra")
+      );
+    }
+  },
 };
 
 export default voteController;

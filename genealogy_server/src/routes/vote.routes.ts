@@ -138,4 +138,25 @@ router
     "/cast-vote",
     voteController.castVote
   )
+
+    /**
+   *  @swagger
+   *  /vote/delete-vote-session-by-id/{id}:
+   *    delete:
+   *      tags: [Tribe Vote]
+   *      summary: delete vote by 
+   *      parameters:
+   *        - in: path
+   *          name: id
+   *          required: true
+   *          schema:
+   *            type: string
+   *      responses:
+   *        200:
+   *          description: OK
+   */
+    .delete(
+      "/delete-vote-session-by-id/:id",
+      voteController.deleteVoteSessionById
+    )
 export default router;
