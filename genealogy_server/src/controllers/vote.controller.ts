@@ -400,14 +400,24 @@ const voteController = {
           new ApiError(StatusCodes.BAD_REQUEST, "Nội dung ý kiến không hợp lệ")
         );
       }
-      const voteSession = await VoteSessionModel.findById(voteSessionId).populate({
-        path: "creator",
-        select: "info",
-        populate: {
-          path: "info",
-          select: "-children -couple",
-        },
-      }).exec();
+      const voteSession = await VoteSessionModel.findById(voteSessionId)
+        .populate({
+          path: "creator",
+          select: "info",
+          populate: {
+            path: "info",
+            select: "-children -couple",
+          },
+        })
+        .populate({
+          path: "options.votes",
+          select: "_id info",
+          populate: {
+            path: "info",
+            select: "-children -couple",
+          },
+        })
+        .exec();
       if (!voteSession) {
         return next(
           new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy biểu quyết")
