@@ -369,6 +369,8 @@ const voteController = {
         throw new ApiError(StatusCodes.FORBIDDEN, "Bạn không có quyền");
       }
 
+      await VoteSessionModel.findByIdAndDelete(voteSessionId).exec();
+
       return sendSuccessResponse(
         res,
         "Xoa vote session thanh cong",
