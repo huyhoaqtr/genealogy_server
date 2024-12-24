@@ -117,7 +117,77 @@ const voteController = {
       );
     }
   },
+  updateVoteSession: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      const voteSessionId = req.params.id;
+      const { title, desc } = req.body;
 
+      if (!title || !desc) {
+        return next(
+          new ApiError(
+            StatusCodes.BAD_REQUEST,
+            "Invalid input. Please provide title, description"
+          )
+        );
+      }
+
+      const populatedVoteSession: any = await VoteSessionModel.findById(
+        voteSessionId
+      )
+        .populate({
+          path: "creator",
+          select: "info",
+          populate: {
+            path: "info",
+            select: "-children -couple",
+          },
+        })
+        .populate({
+          path: "options.votes",
+          select: "_id info",
+          populate: {
+            path: "info",
+            select: "-children -couple",
+          },
+        });
+
+      if (!populatedVoteSession) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy dữ liệu");
+      }
+
+      if (
+        (userRole === "ADMIN" && populatedVoteSession.creator.id !== userId) ||
+        userRole === "MEMBER"
+      ) {
+        throw new ApiError(StatusCodes.FORBIDDEN, "Bạn không có quyền");
+      }
+
+      populatedVoteSession.title = title;
+      populatedVoteSession.desc = desc;
+      await populatedVoteSession.save();
+
+      return sendSuccessResponse(
+        res,
+        "Cập nhật thành công",
+        populatedVoteSession,
+        StatusCodes.OK
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return next(error);
+      }
+
+      return next(
+        new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra")
+      );
+    }
+  },
   getVoteSession: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user.id;

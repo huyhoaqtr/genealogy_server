@@ -24,7 +24,7 @@ router
    *  /vote/create-vote-session:
    *    post:
    *      tags: [Tribe Vote]
-   *      summary: Create vote
+   *      summary: Create vote session
    *      requestBody:
    *        required: true
    *        content:
@@ -48,6 +48,33 @@ router
     voteController.createVoteSession
   )
 
+   /**
+   *  @swagger
+   *  /vote/update-vote-session/{id}:
+   *    put:
+   *      tags: [Tribe Vote]
+   *      summary: Update vote session by id
+   *      requestBody:
+   *        required: true
+   *        content:
+   *          application/json:
+   *            schema:
+   *              type: object
+   *              properties:
+   *                title:
+   *                  type: string
+   *                desc:
+   *                  type: string
+   *      responses:
+   *        200:
+   *          description: OK
+   */
+   .post(
+    "/update-vote-session/:id",
+    permission([Role.LEADER, Role.ADMIN]),
+    voteController.updateVoteSession
+  )
+
   /**
    *  @swagger
    *  /vote/get-vote-session:
@@ -65,7 +92,7 @@ router
 
   /**
    *  @swagger
-   *  /vote/get-vote-session-by-id/:id:
+   *  /vote/get-vote-session-by-id/{id}:
    *    get:
    *      tags: [Tribe Vote]
    *      summary: get vote by 
