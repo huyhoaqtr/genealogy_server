@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { sendMixedMessage } from "firebase/notification";
 import { StatusCodes } from "http-status-codes";
+import { Types } from "mongoose";
 import notificationModel from "~/models/notification.schema";
 import userModel from "~/models/user.schema";
 import { VoteSessionModel } from "~/models/vote.model";
@@ -372,6 +373,62 @@ const voteController = {
         res,
         "Xoa vote session thanh cong",
         null,
+        StatusCodes.OK
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return next(error);
+      }
+
+      return next(
+        new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra")
+      );
+    }
+  },
+  addOptionToVote: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const voteSessionId = req.params.id;
+      const { optionString } = req.body;
+      if (
+        !optionString ||
+        typeof optionString !== "string" ||
+        optionString.trim() === ""
+      ) {
+        return next(
+          new ApiError(StatusCodes.BAD_REQUEST, "Nội dung ý kiến không hợp lệ")
+        );
+      }
+      const voteSession = await VoteSessionModel.findById(voteSessionId).exec();
+      if (!voteSession) {
+        return next(
+          new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy biểu quyết")
+        );
+      }
+
+      const isDuplicate = voteSession.options.some(
+        (option) =>
+          option.text.trim().toLowerCase() === optionString.trim().toLowerCase()
+      );
+      if (isDuplicate) {
+        return next(
+          new ApiError(
+            StatusCodes.CONFLICT,
+            "Ý kiến đã tồn tại trong biểu quyết"
+          )
+        );
+      }
+
+      voteSession.options.push({
+        text: optionString.trim(),
+        votes: [],
+      });
+
+      await voteSession.save();
+
+      return sendSuccessResponse(
+        res,
+        "Thêm ý kiến thành công",
+        voteSession,
         StatusCodes.OK
       );
     } catch (error) {

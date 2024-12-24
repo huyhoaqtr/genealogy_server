@@ -48,7 +48,7 @@ router
     voteController.createVoteSession
   )
 
-   /**
+  /**
    *  @swagger
    *  /vote/update-vote-session/{id}:
    *    put:
@@ -69,7 +69,7 @@ router
    *        200:
    *          description: OK
    */
-   .put(
+  .put(
     "/update-vote-session/:id",
     permission([Role.LEADER, Role.ADMIN]),
     voteController.updateVoteSession
@@ -85,17 +85,14 @@ router
    *        200:
    *          description: OK
    */
-  .get(
-    "/get-vote-session",
-    voteController.getVoteSession
-  )
+  .get("/get-vote-session", voteController.getVoteSession)
 
   /**
    *  @swagger
    *  /vote/get-vote-session-by-id/{id}:
    *    get:
    *      tags: [Tribe Vote]
-   *      summary: get vote by 
+   *      summary: get vote by
    *      parameters:
    *        - in: path
    *          name: id
@@ -106,10 +103,7 @@ router
    *        200:
    *          description: OK
    */
-  .get(
-    "/get-vote-session-by-id/:id",
-    voteController.getVoteSessionById
-  )
+  .get("/get-vote-session-by-id/:id", voteController.getVoteSessionById)
 
   /**
    *  @swagger
@@ -134,17 +128,14 @@ router
    *        200:
    *          description: OK
    */
-  .post(
-    "/cast-vote",
-    voteController.castVote
-  )
+  .post("/cast-vote", voteController.castVote)
 
-    /**
+  /**
    *  @swagger
    *  /vote/delete-vote-session-by-id/{id}:
    *    delete:
    *      tags: [Tribe Vote]
-   *      summary: delete vote by 
+   *      summary: delete vote by
    *      parameters:
    *        - in: path
    *          name: id
@@ -155,8 +146,38 @@ router
    *        200:
    *          description: OK
    */
-    .delete(
-      "/delete-vote-session-by-id/:id",
-      voteController.deleteVoteSessionById
-    )
+  .delete(
+    "/delete-vote-session-by-id/:id",
+    voteController.deleteVoteSessionById
+  )
+
+  /**
+   *  @swagger
+   *  /vote/add-option-to-vote/{id}:
+   *    put:
+   *      tags: [Tribe Vote]
+   *      summary: add option to vote
+   *      parameters:
+   *        - in: path
+   *          name: id
+   *          required: true
+   *          schema:
+   *            type: string
+   *      requestBody:
+   *        required: true
+   *        content:
+   *          application/json:
+   *            schema:
+   *              type: object
+   *              properties:
+   *                optionString:
+   *                  type: string
+   *      responses:
+   *        200:
+   *          description: OK
+   */
+  .put(
+    "/add-option-to-vote/:id",
+    voteController.addOptionToVote
+  );
 export default router;
