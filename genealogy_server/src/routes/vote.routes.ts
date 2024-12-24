@@ -69,7 +69,7 @@ router
    *        200:
    *          description: OK
    */
-   .post(
+   .put(
     "/update-vote-session/:id",
     permission([Role.LEADER, Role.ADMIN]),
     voteController.updateVoteSession
