@@ -100,10 +100,7 @@ router
    *        200:
    *          description: OK
    */
-  .get(
-    "/get-event/:id",
-    eventController.getEvent
-  )
+  .get("/get-event/:id", eventController.getEvent)
 
   /**
    *  @swagger
@@ -126,6 +123,18 @@ router
    *          schema:
    *            type: integer
    *            example: 24
+   *        - in: query
+   *          name: startDate
+   *          description: Start date of filter event
+   *          schema:
+   *            type: string
+   *            format: date
+   *        - in: query
+   *          name: endDate
+   *          description: End date of filter event
+   *          schema:
+   *            type: string
+   *            format: date
    *      responses:
    *        200:
    *          description: OK

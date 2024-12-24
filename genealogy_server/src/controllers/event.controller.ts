@@ -124,7 +124,7 @@ const eventController = {
   getAllEvent: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user.id;
-      const { page = 1, limit = 1000 } = req.query;
+      const { page = 1, limit = 1000, startDate, endDate } = req.query;
       const skip = (Number(page) - 1) * Number(limit);
 
       const user = await userModel.findById(userId);
@@ -132,8 +132,19 @@ const eventController = {
         throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy user");
       }
 
+      const filter: any = { tribe: user.tribe };
+      if (startDate || endDate) {
+        filter.startDate = {};
+        if (startDate) {
+          filter.startDate.$gte = new Date(startDate as string);
+        }
+        if (endDate) {
+          filter.startDate.$lte = new Date(endDate as string);
+        }
+      }
+
       const events = await eventModel
-        .find({ tribe: user?.tribe })
+        .find(filter)
         .skip(skip)
         .limit(Number(limit))
         .sort({ createdAt: -1 })
