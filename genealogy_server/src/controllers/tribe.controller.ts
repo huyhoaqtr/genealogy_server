@@ -175,6 +175,10 @@ const tribeController = {
       const user = await userModel
         .findById(memberId)
         .select("-password")
+        .populate({
+          path: "info",
+          select: "-children -couple",
+        })
         .exec();
 
       if (!leader || !user) {
