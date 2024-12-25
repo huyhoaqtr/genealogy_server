@@ -693,7 +693,7 @@ const tribeController = {
       };
 
       const familyMembers = await getFamilyMembers(ancestor?._id);
-
+      familyMembers.sort((a: any, b: any) => a.level - b.level);
       const memberInfoList: any[] = [];
 
       familyMembers.forEach((member: any) => {
