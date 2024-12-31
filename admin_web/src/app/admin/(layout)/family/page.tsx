@@ -68,14 +68,14 @@ const data: Payment[] = [
     },
 ]
 
-export type Payment = {
+ type Payment = {
     id: string
     amount: number
     status: "pending" | "processing" | "success" | "failed"
     email: string
 }
 
-export const columns: ColumnDef<Payment>[] = [
+ const columns: ColumnDef<Payment>[] = [
 
     {
         accessorKey: "status",
@@ -143,9 +143,8 @@ export const columns: ColumnDef<Payment>[] = [
         },
     },
 ]
-type Props = {}
 
-const FamilyPage = (props: Props) => {
+const FamilyPage = () => {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []

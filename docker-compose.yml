@@ -26,6 +26,18 @@ services:
     networks:
       - genealogy_network
 
+  web_admin:
+    build:
+      context: ./admin_web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    restart: always
+    depends_on:
+      - genealogy_server
+    networks:
+      - genealogy_network
+
   mongo:
     image: mongo:6.0
     container_name: mongo

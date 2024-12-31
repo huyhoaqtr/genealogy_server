@@ -1,11 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronsUpDown, GalleryVerticalEnd } from "lucide-react"
 
-import {
-  DropdownMenu,
-} from "@/components/ui/dropdown-menu"
 import {
   SidebarMenu,
   SidebarMenuButton,

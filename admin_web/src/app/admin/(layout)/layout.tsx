@@ -1,16 +1,10 @@
-import { BarChartComponent } from "@/app/admin/(layout)/dashboard/bar-chart"
-import { LineChartComponent } from "@/app/admin/(layout)/dashboard/line-chart"
-import { PieChartComponent } from "@/app/admin/(layout)/dashboard/pie-chart"
-import TotalCardComponent from "@/app/admin/(layout)/dashboard/total-card"
-import TotalRevenueCard from "@/app/admin/(layout)/dashboard/total-revenue-card"
+
 import { AppSidebar } from "@/components/app-sidebar"
 import {
     Breadcrumb,
     BreadcrumbItem,
     BreadcrumbLink,
     BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import {
