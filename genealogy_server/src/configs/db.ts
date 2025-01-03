@@ -15,10 +15,10 @@ import envConfig from "~/configs/environment";
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(envConfig.MONGODB_URL,{
+    await mongoose.connect(envConfig.MONGODB_URL, {
       dbName: process.env.MONGO_DB_NAME,
-    user: process.env.MONGO_USERNAME,
-    pass: process.env.MONGO_PASSWORD
+      user: process.env.MONGO_USERNAME,
+      pass: process.env.MONGO_PASSWORD,
     });
     console.log("Connected to MongoDB", envConfig.MONGODB_URL);
   } catch (error) {

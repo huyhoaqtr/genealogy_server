@@ -49,13 +49,22 @@ io.on("connection", (socket) => {
   );
 
   // Sự kiện xóa tin nhắn
-  socket.on("deleteMessage", ({ messageId, conversationId }) => {
-    console.log(
-      `Delete message ${messageId} in conversation ${conversationId}`
-    );
-    // Phát lại sự kiện xóa tin nhắn cho các client liên quan
-    io.emit("messageDeleted", { messageId, conversationId });
-  });
+  socket.on(
+    "deleteMessage",
+    ({ receivers, deleteMessageId, conversationPayload }) => {
+      receivers.forEach((receiverId: string) => {
+        const receiverSocketId = onlineUsers[receiverId];
+        if (receiverSocketId) {
+          socket.to(receiverSocketId).emit("deletedMessage", deleteMessageId);
+          socket
+            .to(receiverSocketId)
+            .emit("conversationUpdated", conversationPayload);
+        } else {
+          console.log(`User ${receiverId} is not online.`);
+        }
+      });
+    }
+  );
 
   // Xử lý khi client ngắt kết nối
   socket.on("disconnect", () => {

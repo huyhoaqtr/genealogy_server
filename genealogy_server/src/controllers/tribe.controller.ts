@@ -309,7 +309,7 @@ const tribeController = {
         isDead,
         placeOfWorship,
         personInCharge,
-        couple: couple ? [couple] : undefined,
+        // couple: couple ? [couple] : undefined,
         avatar: avatar ? await uploadToR2(avatar) : undefined,
       };
 
@@ -321,20 +321,13 @@ const tribeController = {
           level: 1,
         });
         if (treeMember) {
-          console.log("Root member existed");
-          throw new ApiError(StatusCodes.BAD_REQUEST, "Root member đã tồn tại");
+          throw new ApiError(StatusCodes.BAD_REQUEST, "Tổ tiên đã tồn tại");
         }
       }
       treeMember = await infoModel.create({
         ...memberInfo,
         tribe: tribe.id,
       });
-
-      if (!treeMember) {
-        console.log(" khong tao duoc");
-
-        throw new ApiError(StatusCodes.BAD_REQUEST, "Không tìm thấy dữ liệu");
-      }
 
       if (parent) {
         const parentMember = await infoModel
@@ -564,26 +557,50 @@ const tribeController = {
     try {
       const userId = req.user.id;
       const memberId = req.params.id;
-
-      const user = await userModel.findById(userId).exec();
-      const member = await infoModel
-        .findOneAndDelete({
-          id: memberId,
-          tribe: user?.tribe,
-        })
-        .exec();
+  
+      const [user, member] = await Promise.all([
+        userModel.findById(userId).exec(),
+        infoModel.findById(memberId).populate("children couple").exec(),
+      ]);
+  
       if (!member) {
         throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy thành viên");
       }
-
-      return sendSuccessResponse(res, "Xoá thành công", null, StatusCodes.OK);
+  
+      if (member?.tribe?.toString() !== user?.tribe?.toString()) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "Thành viên này không thuộc gia tộc của bạn");
+      }
+  
+      if (member.children?.length > 0) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "Thành viên này có con cháu, không thể xóa");
+      }
+  
+      if (member.couple?.length > 0) {
+        await Promise.all(
+          member.couple.map(async (partnerId) => {
+            await infoModel.findByIdAndDelete(partnerId).exec();
+          })
+        );
+      }
+  
+      await infoModel.findByIdAndDelete(memberId).exec();
+  
+      if (member.parent) {
+        await infoModel.findByIdAndUpdate(
+          member.parent,
+          { $pull: { children: memberId } },
+          { new: true }
+        );
+      }
+  
+  
+      return sendSuccessResponse(res, "Xóa thành công", null, StatusCodes.OK);
     } catch (error) {
+  
       if (error instanceof ApiError) {
         return next(error);
       }
-      return next(
-        new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra")
-      );
+      return next(new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Đã có lỗi xảy ra"));
     }
   },
   updateAllTribePosition: async (

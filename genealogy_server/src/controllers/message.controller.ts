@@ -463,17 +463,6 @@ const messageController = {
         );
       }
 
-      const conversationPayload = await conversation?.populate({
-        path: "lastMessage",
-        populate: {
-          path: "sender",
-          select: "-password",
-          populate: {
-            path: "info",
-          },
-        },
-      });
-
       await messageModel.findByIdAndDelete(messageId);
       const lastMessage = await messageModel
         .findOne({
@@ -493,14 +482,32 @@ const messageController = {
         conversationId: conversation.id,
       };
 
-      socket.emit("deleteMessage", deletePayload);
-      socket.emit("updateConversation", conversationPayload);
+      const conversationPayload = await conversationModel
+        .findById(conversation.id)
+        ?.populate({
+          path: "lastMessage",
+          populate: {
+            path: "sender",
+            select: "-password",
+            populate: {
+              path: "info",
+            },
+          },
+        });
+
+      const socketPayload = {
+        receivers: conversation?.members.map((member) => member.toString()),
+        deleteMessageId: messageId,
+        conversationPayload: conversationPayload?.toObject(),
+      };
+
+      socket.emit("deleteMessage", socketPayload);
 
       return sendSuccessResponse(
         res,
         "Xoá tin nhắn thành công",
-        { deletePayload },
-        StatusCodes.CREATED
+        null,
+        StatusCodes.OK
       );
     } catch (error) {
       if (error instanceof ApiError) {
