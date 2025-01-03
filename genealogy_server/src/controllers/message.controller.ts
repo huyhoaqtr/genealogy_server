@@ -477,11 +477,6 @@ const messageController = {
         },
       });
 
-      const deletePayload = {
-        messageId: messageId,
-        conversationId: conversation.id,
-      };
-
       const conversationPayload = await conversationModel
         .findById(conversation.id)
         ?.populate({
@@ -493,6 +488,13 @@ const messageController = {
               path: "info",
             },
           },
+        })
+        .populate({
+          path: "members",
+          select: "-password",
+          populate: {
+            path: "info",
+          },
         });
 
       const socketPayload = {
@@ -500,6 +502,8 @@ const messageController = {
         deleteMessageId: messageId,
         conversationPayload: conversationPayload?.toObject(),
       };
+
+      console.log(socketPayload);
 
       socket.emit("deleteMessage", socketPayload);
 
