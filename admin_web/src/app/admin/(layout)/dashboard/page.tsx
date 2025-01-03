@@ -1,7 +1,7 @@
 import { BarChartComponent } from "@/app/admin/(layout)/dashboard/bar-chart"
 import { LineChartComponent } from "@/app/admin/(layout)/dashboard/line-chart"
 import { PieChartComponent } from "@/app/admin/(layout)/dashboard/pie-chart"
-import TotalCardComponent from "@/app/admin/(layout)/dashboard/total-card"
+import TotalCardComponent from "@/components/global/total-card"
 import TotalRevenueCard from "@/app/admin/(layout)/dashboard/total-revenue-card"
 export default function Page() {
   return (
@@ -9,7 +9,12 @@ export default function Page() {
       <div className="grid auto-rows-min gap-4 md:grid-cols-4">
         {
           Array.from({ length: 4 }).map((_, i) => (
-            <TotalCardComponent key={i} />
+            <TotalCardComponent
+              key={i}
+              title='Total Revenue'
+              content='1,000,000'
+              desc='This month'
+            />
           ))
         }
       </div>

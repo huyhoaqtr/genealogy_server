@@ -48,7 +48,7 @@ export function BarChartComponent({ className }: Props) {
     return (
         <Card className={className}>
             <CardHeader>
-                <CardTitle>Bar Chart - Multiple</CardTitle>
+                <CardTitle>Chi tiết trong năm</CardTitle>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={chartConfig} className="max-h-[15rem] w-full">
@@ -82,6 +82,7 @@ export function BarChartComponent({ className }: Props) {
                     </BarChart>
                 </ChartContainer>
             </CardContent>
+           
         </Card>
     )
 }

@@ -1,11 +1,7 @@
 
-import { AppSidebar } from "@/components/app-sidebar"
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-} from "@/components/ui/breadcrumb"
+import { AppSidebar } from "@/components/global/app-sidebar"
+import BreadCrumbComponent from "@/components/global/bread-crumb"
+
 import { Separator } from "@/components/ui/separator"
 import {
     SidebarInset,
@@ -17,6 +13,7 @@ type Props = {
 }
 
 const DashboardLayout = ({ children }: Props) => {
+
     return (
         <SidebarProvider>
             <AppSidebar />
@@ -25,15 +22,7 @@ const DashboardLayout = ({ children }: Props) => {
                     <div className="flex items-center gap-2 px-4">
                         <SidebarTrigger className="-ml-1" />
                         <Separator orientation="vertical" className="mr-2 h-4" />
-                        <Breadcrumb>
-                            <BreadcrumbList>
-                                <BreadcrumbItem className="hidden md:block">
-                                    <BreadcrumbLink href="#">
-                                        Dashboard
-                                    </BreadcrumbLink>
-                                </BreadcrumbItem>
-                            </BreadcrumbList>
-                        </Breadcrumb>
+                        <BreadCrumbComponent />
                     </div>
                 </header>
                 {children}

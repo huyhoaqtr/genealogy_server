@@ -1,9 +1,12 @@
+import FinancePageTable from '@/app/admin/(layout)/finance/page-table'
 import React from 'react'
 
 
 const FinancePage = () => {
   return (
-    <div>FinancePage</div>
+    <div className='w-full px-4'>
+      <FinancePageTable />
+    </div>
   )
 }
 

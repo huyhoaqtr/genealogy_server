@@ -248,7 +248,7 @@ router
 
   /**
    *  @swagger
-   *  /tribe/get-tribe-tree:
+   *  /tribe/delete-tree-member/{id}:
    *    delete:
    *      tags: [Tribe]
    *      summary: Delete tree member
